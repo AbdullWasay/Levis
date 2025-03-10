@@ -1,14 +1,16 @@
+// productlist.js
 "use client"
 
-import { SlidersHorizontal, X } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { fetchProducts } from "../redux/slices/productslice"
-import ProductCard from "./ProductCard"
-import { Button } from "./ui/Button"
-import { Checkbox } from "./ui/Checkbox"
-import { Label } from "./ui/Label"
-import { Slider } from "./ui/Slider"
+import { SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import fallbackProducts from "../fallbackProducts"; // Import fallback products
+import { fetchProducts } from "../redux/slices/productslice";
+import ProductCard from "./ProductCard";
+import { Button } from "./ui/Button";
+import { Checkbox } from "./ui/Checkbox";
+import { Label } from "./ui/Label";
+import { Slider } from "./ui/Slider";
 
 const ProductList = () => {
   const dispatch = useDispatch()
@@ -48,7 +50,10 @@ const ProductList = () => {
     })
   }
 
-  const filteredProducts = items.filter((product) => {
+  // Ensure fallback products are used if the API fails
+  const productsToDisplay = status === "failed" || items.length === 0 ? fallbackProducts : items;
+
+  const filteredProducts = productsToDisplay.filter((product) => {
     // Filter by category
     if (filters.category.length > 0 && !filters.category.includes(product.category)) {
       return false
@@ -63,10 +68,11 @@ const ProductList = () => {
   })
 
   if (status === "loading") return <div className="loading">Loading products...</div>
-  if (status === "failed") return <div className="error">Error loading products. Please try again.</div>
 
   return (
     <div className="product-list-container">
+      {status === "failed"}
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">All Products</h1>
         <Button variant="outline" className="md:hidden" onClick={() => setShowFilters(!showFilters)}>
@@ -76,9 +82,7 @@ const ProductList = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div
-          className={`filters-sidebar ${showFilters ? "block" : "hidden"} md:block bg-white p-4 rounded-lg shadow-sm`}
-        >
+        <div className={`filters-sidebar ${showFilters ? "block" : "hidden"} md:block bg-white p-4 rounded-lg shadow-sm`}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Filters</h2>
             <button className="md:hidden text-gray-500" onClick={() => setShowFilters(false)}>
@@ -136,7 +140,7 @@ const ProductList = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <ProductCard key={product._id || product.name} product={product} />
               ))}
             </div>
           )}
@@ -147,4 +151,3 @@ const ProductList = () => {
 }
 
 export default ProductList
-
